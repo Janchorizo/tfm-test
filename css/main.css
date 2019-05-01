@@ -1,0 +1,30 @@
+.row-full{
+    width: 100vw;
+    padding: 1em;
+    position: relative;
+    margin-left: -50vw;
+    left: 50%;
+}
+
+#lists{
+	display: flex;
+	overflow-x: scroll;
+}
+
+#lists .list{
+	flex-shrink: 0;
+	margin: 0;
+}
+
+#lists .btn-floating{
+	overflow: visible;
+}
+
+.task .card-content{
+	padding: 14px;
+}
+
+#lists .list>a{
+	display: block;
+	margin: 0 auto;
+}
