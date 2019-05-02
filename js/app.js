@@ -38,8 +38,13 @@ class App extends React.Component {
         prevState.tasks[list_index].splice(task_index, task_index+1);
       else
         prevState.tasks[list_index].splice(task_index, task_index);
+
       if(prevState.tasks[list_index].length == 0)
-        prevState.tasks.splice(list_index, list_index);
+        if(list_index == 0)
+            prevState.tasks.splice(list_index, list_index+1);
+          else
+            prevState.tasks.splice(list_index, list_index);
+        
 
       return prevState;
     })
