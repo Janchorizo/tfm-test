@@ -139,8 +139,8 @@ class Task extends React.Component {
 
     const task_elements = [
       create_collapsible_element('class', 'Task type', this.props.task.type[0]),
-      create_collapsible_element('list', 'Parameters', 'Parameters specific definition'),
-      create_collapsible_element('file_upload', 'Outputs', 'Outputs specific definition'),
+      create_collapsible_element('list', 'Parameters', this.props.task.params.map(x=>x[0]+' ('+x[1]+') ').join(' ,')),
+      create_collapsible_element('file_upload', 'Outputs', this.props.task.output.map(x=>x[0]+' ('+x[1]+') ').join(' ,')),
       create_collapsible_element('done_all', 'Dependencies', 'Dependencies specific definition'),
       create_collapsible_element('link', 'Event hooks', this.props.task.events.map(x=>x[0]).join(' ,')),
       create_collapsible_element('code', 'Body', this.props.task.body)
@@ -167,14 +167,19 @@ class TaskMenu extends React.Component {
 
     this.state = {
       name: '',
+      output_name: '',
+      param_name: '',
       type : '',
-      params : '',
-      output : '',
+      params : [],
+      output : [],
       events: [],
       body : ''
     }
 
-    this.updateType = this.updateType.bind(this);
+    this.addOutput = this.addOutput.bind(this);
+    this.removeOutput = this.removeOutput.bind(this);
+    this.addParam = this.addParam.bind(this);
+    this.removeParam = this.removeParam.bind(this);
   }
 
   componentDidMount(){
@@ -185,9 +190,7 @@ class TaskMenu extends React.Component {
     instances = M.FormSelect.init(elems, null);
   }
 
-  updateType(newclass){
-    alert('here')
-    this.setState({type:newclass});
+  componentDidUpdate(){
   }
 
   addTask(){
@@ -200,6 +203,51 @@ class TaskMenu extends React.Component {
     task['events'] = events;
 
     this.props.addTask(this.props.list_index, task)
+  }
+
+  addOutput(){
+    if(this.state.output_name.length > 0)
+        this.setState(prevState=>{
+            const type_node = document.getElementById('output-type-select').selectedOptions[0];
+            const type = [type_node.label, type_node.value];
+
+            prevState.output.push([prevState.output_name, type[0], type[1]]);
+            return prevState;
+        });
+  }
+
+  removeOutput(i){
+    this.setState(prevState=>{
+      if(i == 0)
+        prevState.output.splice(i, i+1);
+      else
+        prevState.output.splice(i, i);
+
+      return prevState;
+    })
+  }
+
+  addParam(){
+    if(this.state.param_name.length > 0)
+        this.setState(prevState=>{
+            const type_node = document.getElementById('params-type-select').selectedOptions[0];
+            const type = [type_node.label, type_node.value];
+
+            prevState.params.push([prevState.param_name, type[0], type[1]]);
+            console.log([prevState.param_name, type[0], type[1]])
+            return prevState;
+        });
+  }
+
+  removeParam(i){
+    this.setState(prevState=>{
+      if(i == 0)
+        prevState.params.splice(i, i+1);
+      else
+        prevState.params.splice(i, i);
+
+      return prevState;
+    })
   }
 
   render() {
@@ -222,10 +270,69 @@ class TaskMenu extends React.Component {
         e('select', {id: 'type-select'}, ...type_options), 
         e('label', null, 'Task type'))
 
+    // Params
+    const param_name_input = e('div', {className: 'input-field col s4'},
+        e('input', {placeholder:"Parameter name", id:"param-name", type:"text", className:"validate", onChange:(a)=>this.setState({param_name:a.target.value})}),
+        e('label', {htmlFor: 'param-name'}, 'Parameter name'));
+
+    const param_type_options = [];
+
+    [['Luigi parameter', 'luigi.Parameter'], 
+     ['Luigi date parameter', 'luigi.DateParameter']].forEach(option=>{
+        param_type_options.push(e('option', {value: option[1], key:option[0]}, option[0]));
+     });
+
+    const param_type_select = e('div', 
+        {className: "input-field col s4"}, 
+        e('select', {id: 'params-type-select'}, ...param_type_options), 
+        e('label', null, 'Parameter type'))
+
+    const create_param = e('a', 
+      { className: 'waves-effect waves-light btn-floating', onClick: ()=>this.addParam()}, 
+        e('i', {className: 'material-icons'}, 'add'));
+
+    const params_chips = this.state.params.map((out,i)=>e('div', 
+            {className: 'chip'}, out[0]+' | '+out[1], 
+            e('i', {className: 'material-icons', onClick: ()=>this.removeParam(i)}, 'close')))
+
+    const params_input = e('div', null,
+            e('div', {className: 'row'}, param_name_input, param_type_select, create_param),
+            e('div', {className: 'row'}, e('div', {className: 'chips'}, params_chips)));
+
+    // Ouput
+    const output_name_input = e('div', {className: 'input-field col s4'},
+        e('input', {placeholder:"Output name", id:"output-name", type:"text", className:"validate", onChange:(a)=>this.setState({output_name:a.target.value})}),
+        e('label', {htmlFor: 'output-name'}, 'Output name'));
+
+    const output_type_options = [];
+
+    [['Local target', 'luigi.LocalTarget'], 
+     ['Amazon S3 target', 'luigi.contrib.S3'], 
+     ['Google Cloud target', 'luigi.contrib.GDP']].forEach(option=>{
+        output_type_options.push(e('option', {value: option[1], key:option[0]}, option[0]));
+     });
+
+    const output_type_select = e('div', 
+        {className: "input-field col s4"}, 
+        e('select', {id: 'output-type-select'}, ...output_type_options), 
+        e('label', null, 'Task type'))
+
+    const create_output = e('a', 
+      { className: 'waves-effect waves-light btn-floating', onClick: ()=>this.addOutput()}, 
+        e('i', {className: 'material-icons'}, 'add'));
+
+    const output_chips = this.state.output.map((out,i)=>e('div', 
+            {className: 'chip'}, out[0]+' | '+out[1], 
+            e('i', {className: 'material-icons', onClick: ()=>this.removeOutput(i)}, 'close')))
+
+    const output_input = e('div', null,
+            e('div', {className: 'row'}, output_name_input, output_type_select, create_output),
+            e('div', {className: 'row'}, e('div', {className: 'chips'}, output_chips)));
+
     // Event hooks input
     const event_options = [e('option', {value:'', 'disabled':true, 'selected':true}, 'Event hooks to be added : ')];
 
-    [['Dpendency discovered', 'luigi.Event.DEPENDENCY_DISCOVERED '], 
+    [['Dependency discovered', 'luigi.Event.DEPENDENCY_DISCOVERED '], 
      ['Dependency missing', 'luigi.Event.DEPENDENCY_MISSING'], 
      ['Dependency present', 'luigi.Event.DEPENDENCY_PRESENT '],
      ['Broken task', 'luigi.Event.BROKEN_TASK '],
@@ -252,10 +359,15 @@ class TaskMenu extends React.Component {
         e('label', {htmlFor: 'body'}, 'Task body'));
 
     const body = e('div', {className: 'modal-content'}, 
-        e('h4', null, this.state.class),
         name_input,
         type_input,
+        e('hr', null, null),
+        params_input,
+        e('hr', null, null),
+        output_input,
+        e('hr', null, null),
         event_input,
+        e('hr', null, null),
         body_input
     );
 
