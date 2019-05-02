@@ -55,7 +55,28 @@ class App extends React.Component {
   }
 
   exportPipeline(){
-    let doc = "contenido";
+    const task_to_text = (task)=>
+`class ${task.name}(${task.type[1]}):
+${task.params.map(p=>'    '+p[0]+' = '+p[1]+'()').join('\n')}
+
+    def output(self):
+        return {
+${task.output.map(p=>'        '+p[0]+' : '+p[2]+'()').join(',\n')}        
+        }
+
+    def ${task.type[1] == 'luigi.Task'?'run':'program_args'}(self):
+        ${task.body}
+
+    def requires(self):    
+        return None
+
+    `
+
+    let doc = '';
+    for(let list of this.state.tasks){
+        for(let task of list)
+            doc += task_to_text(task);
+    }
 
     //Download the file
     const element = document.createElement('a');
@@ -72,7 +93,7 @@ class App extends React.Component {
 
   render() {
     const main_container = e('div', {className: 'container'}, 
-        e(TopMenu, {tasks:this.state.tasks, clearTasks:this.clearTasks, exportPipeline:this.exportPipeline}, null),
+        e(TopMenu, {clearTasks:this.clearTasks, exportPipeline:this.exportPipeline}, null),
         e(Workspace, {tasks:this.state.tasks, addTask:this.addTask, removeTask:this.removeTask}, null));
     return main_container;
   }
@@ -174,7 +195,7 @@ class TaskMenu extends React.Component {
       name: '',
       output_name: '',
       param_name: '',
-      type : '',
+      type : [],
       params : [],
       output : [],
       events: [],
